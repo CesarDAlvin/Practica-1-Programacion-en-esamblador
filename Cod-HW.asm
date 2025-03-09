@@ -1,14 +1,14 @@
-; TEAM PAMBACODE (nombre del equipo)
+; TEAM PAMBACODE
 ; ESTE CÓDIGO MUESTRA UN MENSAJE EN UN DISPLAY LCD 16x2 Y REALIZA UNA ANIMACIÓN SIMPLE EN PANTALLA
 ; SE IMPRIMIRÁ EL MENSAJE EN AMBAS LÍNEAS DEL LCD Y SE EJECUTARÁ UN RETARDO PARA VISUALIZARLO,
 ; LUEGO SE REALIZARÁ UNA ANIMACIÓN EN LA PANTALLA GRÁFICA DEL SIMULADOR.
-; 2025/03/09 - V.2.0.0
+; 2025/03/09 - V.2.0.1
 ; TRABAJARON: CESAR ARTURO / CesarDAlvin | SARA CRYSTEL / Sara130401 | CERON DAUZON / Juryelcd
 
 ;------------------------------------------------------------------------------
 ; Configuración inicial del programa
 ;------------------------------------------------------------------------------
-org 100h                   ; Define el comienzo del programa en offset 100h (formato COM)
+org 0x100                   ; Define el comienzo del programa en offset 100h (formato COM)
 
 ;------------------------------------------------------------------------------
 ; Sección de datos
