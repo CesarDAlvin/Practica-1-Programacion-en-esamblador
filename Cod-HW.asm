@@ -2,7 +2,7 @@
 ; ESTE CÓDIGO MUESTRA UN MENSAJE EN UN DISPLAY LCD 16x2 Y REALIZA UNA ANIMACIÓN SIMPLE EN PANTALLA
 ; SE IMPRIMIRÁ EL MENSAJE EN AMBAS LÍNEAS DEL LCD Y SE EJECUTARÁ UN RETARDO PARA VISUALIZARLO,
 ; LUEGO SE REALIZARÁ UNA ANIMACIÓN EN LA PANTALLA GRÁFICA DEL SIMULADOR.
-; 2025/03/09 - V.2.0.2
+; 2025/03/09 - V.3.1.1
 ; TRABAJARON: CESAR ARTURO / CesarDAlvin | SARA CRYSTEL / Sara130401 | CERON DAUZON / Juryelcd
 
 JMP boot	; Salta a la etiqueta 'boot' para iniciar el programa
@@ -66,21 +66,21 @@ boot:
 	MOV C, mario1
 	MOV D, vslDisplay
 	CALL draw_sprite
-    
-    ; Imprime "Derecha"
+
+	; Imprime "Derecha"
 	MOV C, Derecha
 	MOV D, txtDisplay
 	CALL print
 
 	; Retraso de 2 segundos
 	CALL delay
-
+	
 	; Dibuja el frame mario2
 	MOV C, mario2
 	MOV D, vslDisplay
 	CALL draw_sprite
     
-    ; Imprime "Izquierda"
+    	; Imprime "Izquierda"
 	MOV C, Izquierda
 	MOV D, txtDisplay
 	CALL print
@@ -96,30 +96,30 @@ print:
 	PUSH B				; Guarda el valor de B en la pila
 	MOV B, 0			; Inicializa B en 0 (para comparar con el terminador)
 .loop_print:
-	MOVB AL, [C]		; Obtiene un carácter de la cadena (apuntada por C)
-	MOVB [D], AL		; Escribe el carácter en la pantalla de texto (apuntada por D)
+	MOVB AL, [C]			; Obtiene un carácter de la cadena (apuntada por C)
+	MOVB [D], AL			; Escribe el carácter en la pantalla de texto (apuntada por D)
 	INC C				; Incrementa C para apuntar al siguiente carácter
 	INC D				; Incrementa D para apuntar a la siguiente posición en la pantalla
-	CMPB BL, [C]		; Compara el carácter actual con el terminador (0)
-	JNZ .loop_print		; Si no es el terminador, repite el bucle
+	CMPB BL, [C]			; Compara el carácter actual con el terminador (0)
+	JNZ .loop_print			; Si no es el terminador, repite el bucle
 	POP B				; Restaura el valor de B desde la pila
 	POP A				; Restaura el valor de A desde la pila
-	RET					; Retorna de la subrutina
+	RET				; Retorna de la subrutina
 
 ; Subrutina para dibujar un sprite
 draw_sprite:
 	PUSH A				; Guarda el valor de A en la pila
 	PUSH B				; Guarda el valor de B en la pila
 .loop_draw:
-	MOVB AL, [C]		; Obtiene un byte del sprite (apuntado por C)
-	MOVB [D], AL		; Escribe el byte en la pantalla visual (apuntada por D)
+	MOVB AL, [C]			; Obtiene un byte del sprite (apuntado por C)
+	MOVB [D], AL			; Escribe el byte en la pantalla visual (apuntada por D)
 	INC C				; Incrementa C para apuntar al siguiente byte del sprite
 	INC D				; Incrementa D para apuntar a la siguiente posición en la pantalla
-	CMP D, 0x400		; Compara D con el final de la memoria de la pantalla visual
-	JNZ .loop_draw		; Si no ha llegado al final, repite el bucle
+	CMP D, 0x400			; Compara D con el final de la memoria de la pantalla visual
+	JNZ .loop_draw			; Si no ha llegado al final, repite el bucle
 	POP B				; Restaura el valor de B desde la pila
 	POP A				; Restaura el valor de A desde la pila
-	RET					; Retorna de la subrutina
+	RET				; Retorna de la subrutina
     
 ; Subrutina de retardo para 2 segundos a 4kHz
 delay:
