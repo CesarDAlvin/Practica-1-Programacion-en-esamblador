@@ -2,101 +2,109 @@
 ; ESTE CÓDIGO MUESTRA UN MENSAJE EN UN DISPLAY LCD 16x2 Y REALIZA UNA ANIMACIÓN SIMPLE EN PANTALLA
 ; SE IMPRIMIRÁ EL MENSAJE EN AMBAS LÍNEAS DEL LCD Y SE EJECUTARÁ UN RETARDO PARA VISUALIZARLO,
 ; LUEGO SE REALIZARÁ UNA ANIMACIÓN EN LA PANTALLA GRÁFICA DEL SIMULADOR.
-; 2025/03/09 - V.2.0.2
+; 2025/03/09 - V.3.0.0
 ; TRABAJARON: CESAR ARTURO / CesarDAlvin | SARA CRYSTEL / Sara130401 | CERON DAUZON / Juryelcd
 
-;------------------------------------------------------------------------------
-; Sección de datos
-;------------------------------------------------------------------------------
-msg_line1 db 'Hola, Mundo LCD!',0   ; Mensaje para la línea 1 (terminado en 0 para marcar fin de cadena)
-msg_line2 db 'Linea 2: Ejemplo!',0     ; Mensaje para la línea 2 (terminado en 0)
-ani_char db '*'                        ; Carácter que se usará en la animación gráfica
+	JMP boot	; Salta a la etiqueta 'boot' para iniciar el programa
 
-;------------------------------------------------------------------------------
-; Inicio del programa principal
-;------------------------------------------------------------------------------
-start:
-    mov ax, cs         ; Mueve el valor del segmento de código (CS) a AX
-    mov ds, ax         ; Establece DS = CS para que el segmento de datos sea el mismo que el de código
+; Constantes
+stackTop    EQU 0xFF    ; Puntero inicial de la pila
+txtDisplay  EQU 0x2E0   ; Dirección de memoria de la pantalla de texto
+vslDisplay  EQU 0x300   ; Dirección de memoria de la pantalla visual
 
-    ;-- Muestra mensajes en el LCD simulando la escritura en ambas líneas --
-    call lcd_clear     ; Llama a la subrutina que limpia el display LCD
-    call lcd_write_line1  ; Llama a la subrutina que escribe msg_line1 en la primera línea del LCD
-    call lcd_write_line2  ; Llama a la subrutina que escribe msg_line2 en la segunda línea del LCD
+; Definición de datos
+hello:	
+	DB "Hello World!"	; Cadena de texto a imprimir
+	DB 0				; Terminador de cadena (carácter nulo)
 
-    ;-- Retardo para mantener el mensaje visible (delay similar a C) --
-    mov cx, 0FFFFh     ; Carga un valor alto en CX para crear un retardo (el valor se puede ajustar)
-    call delay         ; Llama a la subrutina de retardo
+sprite: 
+	DB "\xFF\xFF\xFF\xFF\xFF\xC4\xC4\xC4"	; Datos del sprite (16x16)
+	DB "\xC4\xC4\xFF\xFF\xFF\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\xFF\xC4\xC4\xC4\xC4"
+	DB "\xC4\xC4\xC4\xC4\xC4\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\xFF\x8C\x8C\x8C\xF4"
+	DB "\xF4\x8C\xF4\xFF\xFF\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\x8C\xF4\x8C\xF4\xF4"
+	DB "\xF4\x8C\xF4\xF4\xF4\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\x8C\xF4\x8C\x8C\xF4"
+	DB "\xF4\xF4\x8C\xF4\xF4\xF4\xFF\xFF"
+	DB "\xFF\xFF\xFF\x8C\x8C\xF4\xF4\xF4"
+	DB "\xF4\x8C\x8C\x8C\x8C\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\xFF\xFF\xF4\xF4\xF4"
+	DB "\xF4\xF4\xF4\xF4\xFF\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\xFF\x8C\x8C\xC4\x8C"
+	DB "\x8C\x8C\xFF\xFF\xFF\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\x8C\x8C\x8C\xC4\x8C"
+	DB "\x8C\xC4\x8C\x8C\x8C\xFF\xFF\xFF"
+	DB "\xFF\xFF\x8C\x8C\x8C\x8C\xC4\xC4"
+	DB "\xC4\xC4\x8C\x8C\x8C\x8C\xFF\xFF"
+	DB "\xFF\xFF\xF4\xF4\x8C\xC4\xF4\xC4"
+	DB "\xC4\xF4\xC4\x8C\xF4\xF4\xFF\xFF"
+	DB "\xFF\xFF\xF4\xF4\xF4\xC4\xC4\xC4"
+	DB "\xC4\xC4\xC4\xF4\xF4\xF4\xFF\xFF"
+	DB "\xFF\xFF\xF4\xF4\xC4\xC4\xC4\xC4"
+	DB "\xC4\xC4\xC4\xC4\xF4\xF4\xFF\xFF"
+	DB "\xFF\xFF\xFF\xFF\xC4\xC4\xC4\xFF"
+	DB "\xFF\xC4\xC4\xC4\xFF\xFF\xFF\xFF"
+	DB "\xFF\xFF\xFF\x8C\x8C\x8C\xFF\xFF"
+	DB "\xFF\xFF\x8C\x8C\x8C\xFF\xFF\xFF"
+	DB "\xFF\xFF\x8C\x8C\x8C\x8C\xFF\xFF"
+	DB "\xFF\xFF\x8C\x8C\x8C\x8C\xFF\xFF"
 
-    ;-- Realiza una animación simple en la pantalla gráfica --
-    call graphic_animation  ; Llama a la subrutina que ejecuta la animación
+; Programa principal
+boot:
+	MOV SP, stackTop	; Inicializa el puntero de la pila
 
-    ;-- Finaliza el programa --
-    mov ax, 4C00h      ; Prepara el código de finalización para DOS (función 4Ch de INT 21h)
-    int 21h            ; Llama a la interrupción 21h para terminar el programa
+	; Imprime "Hello World!" en la pantalla de texto
+	MOV C, hello		; Apunta el registro C a la cadena "Hello World!"
+	MOV D, txtDisplay	; Apunta el registro D a la pantalla de texto
+	CALL print			; Llama a la subrutina para imprimir
 
-;------------------------------------------------------------------------------
-; Subrutina: delay
-; Descripción: Genera un retardo mediante un bucle que decrementa el registro CX.
-; Cada iteración (con NOP y LOOP) consume tiempo, generando una pausa.
-;------------------------------------------------------------------------------
-delay:
-    push cx            ; Guarda el valor de CX en la pila para no perderlo
-delay_loop:
-    nop                ; NOP significa "No OPeration": no hace nada pero consume tiempo
-    loop delay_loop    ; Decrementa CX y salta a delay_loop si CX ≠ 0
-    pop cx             ; Recupera el valor original de CX (aunque en este caso ya no se utiliza)
-    ret                ; Retorna a la instrucción que llamó a delay
+	; Dibuja el sprite en la pantalla visual
+	MOV C, sprite		; Apunta el registro C al sprite
+	MOV D, vslDisplay	; Apunta el registro D a la pantalla visual
+	CALL draw_sprite	; Llama a la subrutina para dibujar el sprite
 
-;------------------------------------------------------------------------------
-; Subrutina: lcd_clear
-; Descripción: Limpia el display LCD. En un hardware real se enviarían comandos específicos,
-; pero en este simulador se asume una función abstracta.
-;------------------------------------------------------------------------------
-lcd_clear:
-    ; Aquí se simula la limpieza del LCD (por ejemplo, llenando la memoria del LCD con espacios).
-    ret                ; Retorna inmediatamente
+	HLT					; Detiene la ejecución del programa
 
-;------------------------------------------------------------------------------
-; Subrutina: lcd_write_line1
-; Descripción: Escribe el mensaje de la primera línea (msg_line1) en el LCD.
-;------------------------------------------------------------------------------
-lcd_write_line1:
-    ; Se simula la escritura copiando el mensaje en la posición asignada a la línea 1.
-    ret                ; Retorna inmediatamente
+; Subrutina para imprimir una cadena de texto
+print:
+	PUSH A				; Guarda el valor de A en la pila
+	PUSH B				; Guarda el valor de B en la pila
+	MOV B, 0			; Inicializa B en 0 (para comparar con el terminador)
+.loop_print:
+	MOVB AL, [C]		; Obtiene un carácter de la cadena (apuntada por C)
+	MOVB [D], AL		; Escribe el carácter en la pantalla de texto (apuntada por D)
+	INC C				; Incrementa C para apuntar al siguiente carácter
+	INC D				; Incrementa D para apuntar a la siguiente posición en la pantalla
+	CMPB BL, [C]		; Compara el carácter actual con el terminador (0)
+	JNZ .loop_print		; Si no es el terminador, repite el bucle
+	POP B				; Restaura el valor de B desde la pila
+	POP A				; Restaura el valor de A desde la pila
+	RET					; Retorna de la subrutina
 
-;------------------------------------------------------------------------------
-; Subrutina: lcd_write_line2
-; Descripción: Escribe el mensaje de la segunda línea (msg_line2) en el LCD.
-;------------------------------------------------------------------------------
-lcd_write_line2:
-    ; Se simula la escritura copiando el mensaje en la posición asignada a la línea 2.
-    ret                ; Retorna inmediatamente
-
-;------------------------------------------------------------------------------
-; Subrutina: graphic_animation
-; Descripción: Realiza una animación simple en la pantalla gráfica.
-; La animación consiste en mover el carácter '*' horizontalmente de izquierda a derecha.
-;------------------------------------------------------------------------------
-graphic_animation:
-    mov si, 0          ; Inicializa el contador (posición horizontal) en 0
-animation_loop:
-    ; Aquí se simula la limpieza y redibujado de la pantalla gráfica.
-    ; En un hardware real se podría escribir directamente en la memoria de video.
+; Subrutina para dibujar un sprite
+draw_sprite:
+	PUSH A				; Guarda el valor de A en la pila
+	PUSH B				; Guarda el valor de B en la pila
+.loop_draw:
+	MOVB AL, [C]		; Obtiene un byte del sprite (apuntado por C)
+	MOVB [D], AL		; Escribe el byte en la pantalla visual (apuntada por D)
+	INC C				; Incrementa C para apuntar al siguiente byte del sprite
+	INC D				; Incrementa D para apuntar a la siguiente posición en la pantalla
+	CMP D, 0x400		; Compara D con el final de la memoria de la pantalla visual
+	JNZ .loop_draw		; Si no ha llegado al final, repite el bucle
+	POP B				; Restaura el valor de B desde la pila
+	POP A				; Restaura el valor de A desde la pila
+	RET					; Retorna de la subrutina
     
-    ; Simulación: Se “dibuja” el carácter en la posición actual (representativo)
-    ; Por ejemplo: escribir en una dirección de memoria ficticia: [video_memory + si] = '*'
-    
-    mov cx, 0FFFh      ; Carga un valor de retardo para que el movimiento sea visible
-    call delay         ; Llama a la subrutina delay para pausar entre movimientos
-    
-    inc si             ; Incrementa la posición horizontal (mueve el carácter a la derecha)
-    cmp si, 16         ; Compara SI con 16 (ancho del LCD/posición final)
-    jl animation_loop  ; Si SI es menor que 16, vuelve al inicio del bucle para seguir animando
-    ret                ; Retorna al programa principal
-
-;------------------------------------------------------------------------------
-; Relleno y firma del sector (para formatos de archivo de 512 bytes, como en arranques)
-;------------------------------------------------------------------------------
-times 510 - ($ - $$) db 0   ; Rellena hasta 510 bytes con 0
-dw 0AA55h                   ; Firma del sector de arranque (valor característico)
+    delay:
+    MOV A, 0xFF   ; Carga un valor grande en A
+outer_loop:
+    MOV B, 0xFF   ; Carga otro valor grande en B
+inner_loop:
+    DEC B         ; Decrementa B
+    JNZ inner_loop ; Si B no es 0, sigue el bucle
+    DEC A         ; Decrementa A
+    JNZ outer_loop ; Si A no es 0, repite el bucle
+    RET           ; Retorna de la subrutina
